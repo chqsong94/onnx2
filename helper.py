@@ -55,14 +55,14 @@ class CreateConvOps():
 		self.input_shape = (1, int(self.cfgDict["input_channel_num"]), int(self.cfgDict["input_size_h_(row)"]), int(self.cfgDict["input_size_w_(col)"]))
 	
 
-	def construct_input(self, mode):
+	def construct_input(self, mode, layeridx=None):
 		if mode in ['add', 'em']:
-			input1 = O.helper.make_tensor_value_info('Input1', O.TensorProto.FLOAT, list(self.input_shape))
+			input1 = O.helper.make_tensor_value_info('Input1'+str(layeridx), O.TensorProto.FLOAT, list(self.input_shape))
 			self.values_info.append(input1)
-			input2 = O.helper.make_tensor_value_info('Input2', O.TensorProto.FLOAT, list(self.input_shape))
+			input2 = O.helper.make_tensor_value_info('Input2'+str(layeridx), O.TensorProto.FLOAT, list(self.input_shape))
 			self.values_info.append(input2)  
 			self.values_in += [input1, input2]
-			output_name = ['Input1','Input2']  
+			output_name = ['Input1'+str(layeridx),'Input2'+str(layeridx)]  
 		else:
 			inputs = O.helper.make_tensor_value_info('Input', O.TensorProto.FLOAT, list(self.input_shape))
 			self.values_info.append(inputs) 
@@ -72,6 +72,7 @@ class CreateConvOps():
 
 
 	def construct_slice(self, testType, input_name_lst):
+		# print(input_name_lst)
 		self.input_shape = (1, self.input_shape[1], self.x2-self.x1, self.y2-self.y1)
 		if len(input_name_lst)==1:
 			slice_node = O.helper.make_node(
@@ -79,9 +80,10 @@ class CreateConvOps():
 				inputs = input_name_lst,
 				outputs = ['slice_out' + testType],
 				starts= np.array([0, 0, self.x1, self.y1], dtype=np.int64),
-				ends= np.array([0, self.input_shape[1], self.x2, self.y2], dtype=np.int64),
+				ends= np.array([1, self.input_shape[1], self.x2, self.y2], dtype=np.int64),
 				name=testType+"slice"
 				)
+			#print(11111111111111111111111111111111111111)
 			self.node_list.append(slice_node)
 			output = O.helper.make_tensor_value_info('slice_out'+testType, O.TensorProto.FLOAT, list(self.input_shape))
 			self.values_info.append(output)	
@@ -156,7 +158,9 @@ class CreateConvOps():
 		inputs = [],
 		outputs = ['weights' + testType],
 		name='weights_1',
-		value=weights_tensor,)
+		value=weights_tensor
+		)
+
 		self.node_list.append(w_node)
 		self.values_info.append(w_info)
 		output_name = ['weights'+testType]
@@ -268,8 +272,8 @@ class CreateConvOps():
 		return output_name
 
 
-	def construct_dense(self, testType, input_name, needflatten):
-		if needflatten == True:
+	def construct_dense(self, testType, input_name, layeridx):
+		if layeridx == 1:
 			flattened_output_shape = (self.input_shape[0], self.input_shape[1]*self.input_shape[2]*self.input_shape[3], 1, 1) # this is intermediate shape
 			output = O.helper.make_tensor_value_info('flatten'+testType, O.TensorProto.FLOAT, list(flattened_output_shape))
 			flatten_node = O.helper.make_node(

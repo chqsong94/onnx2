@@ -58,8 +58,9 @@ def readTestCase(testCaseFileName, sheet_name):
     return cfgList
 
 
-def getJson(cfgDict, model_name):
+def getJson(cfgDict, model_name, idx="1"):
     mykeys = [
+    "output_channel_num",
     "conv_pformat",	
     "conv_oformat",	
     "decompact",
@@ -78,8 +79,8 @@ def getJson(cfgDict, model_name):
     "pfunc_oformat"]
 
     data1 = {"name": model_name} 
-    data2 = {k: int(v) for k, v in cfgDict.items() if k in mykeys}
-    data = {"summary":{**data1, **data2}}
+    data2 = {k: int(float(v)) for k, v in cfgDict.items() if k in mykeys}
+    data = {"summary"+idx:{**data1, **data2}}
     return data
 
 
@@ -87,65 +88,80 @@ def genTestCase_single(cfgList,dir_output):
     if os.path.exists(dir_output):
         shutil.rmtree(dir_output)
     os.makedirs(dir_output)
-
     for cfgDict in cfgList:
         model_name = '{:05d}'.format(int(cfgDict["test_case_number"])) + '_' + cfgDict["test_case_notes"]   #changed
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
         os.mkdir(dir_output + "/" + model_name)
+        
         print('creating ' + model_name)
-
-
-        my_jsonfile1, mysingleLayer = buildSingleLayerONNX(cfgDict)
+        my_jsonfile1 = getJson(cfgDict, model_name)
+        my_jsonfile2, mysingleLayer = buildSingleLayerONNX(cfgDict, 1)
         model = helper.getModel(mysingleLayer)
         O.checker.check_model(model)
-        
-        my_jsonfile2 = getJson(cfgDict, model_name)
-
-
         data = {**my_jsonfile1, **my_jsonfile2} 
-
         with open(dir_output+'/'+ model_name+'/'+'config.json', 'w') as outfile:  
             json.dump(data, outfile, indent=4)
 
         O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
 
 
-# def genTestCase_multi(cfgList1, cfgList2,  dir_output):
-#     if os.path.exists(dir_output):
-#         shutil.rmtree(dir_output)
-#     os.mkdir(dir_output)
+def genTestCase_multi(cfgList1, cfgList2,  dir_output):
+    if os.path.exists(dir_output):
+        shutil.rmtree(dir_output)
+    os.makedirs(dir_output)
 
-#     for cfgDict1, cfgDict2 in cfgList1, cfgList2:
-#         model_name = '{:04d}'.format(int(cfgDict["test_case_number"])) + '_' + cfgDict["test_case_notes"]
-#         print('creating ' + model_name)
-#         model = buildMultiLayerONNX(cfgDict1, cfgDict2)
-#         O.checker.check_model(model)
+    for cfgDict1, cfgDict2 in zip(cfgList1, cfgList2):
+        model_name = '{:04d}'.format(int(cfgDict1["test_case_number"])) + '_' + cfgDict1["test_case_notes"] + " AND " + cfgDict2["test_case_notes"]
+        
+        model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
+        os.mkdir(dir_output + "/" + model_name)
+        print('creating ' + model_name)
+        data1 = getJson(cfgDict1, model_name)
+        data2 = getJson(cfgDict2, model_name, "2")
+        my_jsonfile, mymultiLayer = buildMultiLayerONNX(cfgDict1, cfgDict2)
+        
+        model = helper.getModel(mymultiLayer)
+        O.checker.check_model(model)
 
-#         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
-#         os.mkdir(dir_output + "/" + model_name)
-#         data = getJson(cfgDict, model_name)
-#         with open(dir_output+'/'+ model_name+'/'+'config.json', 'w') as outfile:  
-#             json.dump(data, outfile, indent=4)
-#         O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
+        data = {**data1, **data2, **my_jsonfile}
+        with open(dir_output+'/'+ model_name+'/'+'config.json', 'w') as outfile:  
+            json.dump(data, outfile, indent=4)
+
+        O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
 
 
 if __name__ == "__main__":
     np.random.seed(8)
-    excel_path="./test_case"
+    excel_path="./multi_layer_test_case"
     for version, test_plan in enumerate(os.listdir(excel_path)):
-    # for version, test_plan in enumerate(["BN_test_case.xlsx"]):
-        print(version, test_plan)
-        if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
-            continue
+        # if test_plan == "multi":
         output_path = "."
         # configs = get_config(version+1, test_plan)
         configs = OrderedDict()
         configs['fn_excel'] = test_plan
         configs['sheet_name'] = 'Sheet1' 
-        configs['version'] = 'v{:03d}'.format(version+100)    #offset changed
-
-
+        configs['version'] = 'v7{:02d}'.format(version+1)    #offset changed
         testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
-        cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
-        dir_output = "{}/gen_test_cases/test_cases_{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
-        genTestCase_single(cfgList, dir_output)
+
+        cfgList1 = readTestCase(testCasesFileName, sheet_name='layer1')
+     
+        
+        cfgList2 = readTestCase(testCasesFileName, sheet_name='layer2')
+        dir_output = "{}/gen_test_cases_multi/test_cases_{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
+
+        genTestCase_multi(cfgList1, cfgList2, dir_output)
+
+        # else:
+        #     print(version, test_plan)
+        #     if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
+        #         continue
+        #     output_path = "."
+        #     # configs = get_config(version+1, test_plan)
+        #     configs = OrderedDict()
+        #     configs['fn_excel'] = test_plan
+        #     configs['sheet_name'] = 'Sheet1' 
+        #     configs['version'] = 'v7{:02d}'.format(version+1)   #offset changed
+        #     testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
+        #     cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
+        #     dir_output = "{}/gen_test_cases/test_cases_{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
+        #     genTestCase_single(cfgList, dir_output)

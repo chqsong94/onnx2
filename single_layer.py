@@ -12,21 +12,23 @@ import json
 import xlrd
 
 
-def buildSingleLayerONNX(cfgDict, needflatten=True):
+def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
     singleLayer = CreateConvOps(cfgDict)
     jsonFile = {}
     ################################################################################
     # check whether it is PFUNC or CONV type                                       #
     ################################################################################
+    testType = cfgDict["conv_mode_(in_model_operation)"] +"_" + str(layeridx)
     if cfgDict["conv/pfunc"] == "CONV":
         # this is in conv mode
         setting = cfgDict["conv_mode_in_hw_setting"]
         if setting == "0":
             # bypass
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             if singleLayer.check_slice(): 
                 convOpsName = singleLayer.construct_slice(testType, input_name_lst)
             else: convOpsName = input_name_lst
@@ -35,10 +37,11 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
         elif setting in ["1", "6", "7"]:
             # conv 3x3 or ch4
             # having pad attr
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
@@ -62,10 +65,11 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
         # elif testType == "5":
         #     # conv 3x3 dw
         # having pad attr
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
@@ -78,10 +82,11 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
         elif setting == "8":
             # deconv 3x3 by2 only
             # having pad attr
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
@@ -94,27 +99,31 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
         elif setting == "9":
             # dense
             # no pad attr
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             # singleLayer.getPaddingInfo()
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getCONVOutputShape('dense')
             input_name_lst += singleLayer.construct_weights(testType, 'dense')
             input_name_lst += singleLayer.construct_bias(testType, 'dense')
-            convOpsName = singleLayer.construct_dense(testType, input_name_lst, needflatten)
+            convOpsName = singleLayer.construct_dense(testType, input_name_lst, layeridx)
         # elif testType == "10":
         #     # matrix
         elif setting == "11":
             # Elementwise product
             # no pad
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
-            input_name_lst += singleLayer.construct_input('em')
+            input_name_lst += singleLayer.construct_input('em', layeridx)
+            if layeridx !=1: 
+                input_name_lst[0] = prevalueinfo[0]
             # singleLayer.getPaddingInfo()
+           
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
@@ -124,10 +133,11 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
         #     # Elementwise square
         elif setting in ['13', '14']:
             # H-Upsample # V-Upsample
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             # singleLayer.getPaddingInfo()
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
@@ -137,10 +147,11 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
         
         elif setting == "15":
             # Conv 1x1 dw bn
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             input_name_lst += singleLayer.construct_input('conv')
+            if layeridx !=1: input_name_lst = prevalueinfo
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
@@ -160,10 +171,12 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
 
         elif setting == "16":
             # Elementwise add
-            testType = cfgDict["conv_mode_(in_model_operation)"]
+            # testType = cfgDict["conv_mode_(in_model_operation)"]
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
-            input_name_lst += singleLayer.construct_input('add')
+            input_name_lst += singleLayer.construct_input('add', layeridx)
+            if layeridx !=1:
+                input_name_lst[0] = prevalueinfo[0]
             # singleLayer.getPaddingInfo()
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
@@ -179,21 +192,21 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
 
         # default
         input_bitwidth = 15 if int(singleLayer.cfgDict["conv_16b"]) == 1 else 8
-        output_bitwidth = output_bitwidth if int(singleLayer.cfgDict["pconv_16b"]) == 1 else 8
+        # output_bitwidth = output_bitwidth if int(singleLayer.cfgDict["pconv_16b"]) == 1 else 8
 
-
+        if cfgDict["pconv_gap_en"] == "0" and cfgDict["pconv_relu_en"] == '0':
+            output_bitwidth = 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15
         jsonFile[testType] = {
             "input_bitwidth": input_bitwidth,
             "output_bitwidth": output_bitwidth
         }
 
-
-
     ################################################################################
     #         PCONV                                                                #
     ################################################################################
-        if cfgDict["pconv_en"]:
-            testType = "pconv"
+
+        if cfgDict["pconv_en"] == "1":
+            testType = "pconv"+'_'+ str(layeridx)
             GAPLayer = GAPLayer_wrapper(cfgDict)
             reluLayer = reluLayer_wrapper(cfgDict)
             layerDict = OrderedDict()
@@ -205,7 +218,7 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
 
             for c in layerDict:
                 if layerDict[c] != None:
-                    output = layerDict[c](testType+c, input_str_info, input_shape)
+                    output = layerDict[c](testType+ '_'+ c, input_str_info, input_shape)
                     if output != None:
                         # below two line for next layer assign
                         input_str_info = output[3]
@@ -219,31 +232,25 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
                 gap_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3, 4] else 15
                 gap_output_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3 , 4] else 15
                 # default
-                gap_input_bitwidth = gap_input_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
-                gap_output_bitwidth = gap_output_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
+                # gap_input_bitwidth = gap_input_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
+                # gap_output_bitwidth = gap_output_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
 
-                jsonFile[testType+"GAP"] = {
+                jsonFile[testType+"_GAP"] = {
                     "input_bitwidth": gap_input_bitwidth,
                     "output_bitwidth": gap_output_bitwidth # it depends
                 }
 
- 
-                jsonFile[testType+"Relu"] = {
+                jsonFile[testType+"_Relu"] = {
                     "input_bitwidth": gap_output_bitwidth,
                     "output_bitwidth": 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15 # it depends
                 }
 
-            elif cfgDict["pconv_gap_en"] == "1" and cfgDict["pconv_relu_en"] == '0':
-                # sigmoid/tanh
-                gap_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3, 4] else 15
-                gap_output_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3 , 4] else 15
-                # default
-                gap_input_bitwidth = gap_input_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
-                gap_output_bitwidth = gap_output_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
 
-                jsonFile[testType+"GAP"] = {
-                    "input_bitwidth": gap_input_bitwidth,
-                    "output_bitwidth": gap_output_bitwidth # it depends
+
+            elif cfgDict["pconv_gap_en"] == "1" and cfgDict["pconv_relu_en"] == '0':
+                jsonFile[testType+"_GAP"] = {
+                    "input_bitwidth": 15,
+                    "output_bitwidth": 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15 
                 }
 
             elif  cfgDict["pconv_relu_en"] == '1' and cfgDict["pconv_gap_en"] == "0":
@@ -251,21 +258,16 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
                 relu_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3, 4] else 15
    
                 # default
-                relu_input_bitwidth = relu_input_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
-                relu_output_bitwidth = 15 if int(cfgDict["pconv_16b"]) == 1 else 8
+                relu_output_bitwidth = 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15
 
-
-                jsonFile[testType+"Relu"] = {
+                jsonFile[testType+"_Relu"] = {
                     "input_bitwidth": relu_input_bitwidth,
                     "output_bitwidth": relu_output_bitwidth # it depends
                 }
 
-
-
-
         else: print('pconv is not enable')
         singleLayer.values_out.append(singleLayer.values_info[-1])
-        singleLayer.output_shape = input_shape
+        # singleLayer.output_shape = input_shape
 
     ################################################################################
     ################################################################################
@@ -273,12 +275,15 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
     ################################################################################
     elif cfgDict["conv/pfunc"] == "PFUNC":
         setting = cfgDict["conv_mode_in_hw_setting"]
-        testType = cfgDict["conv_mode_(in_model_operation)"]
+        # testType = cfgDict["conv_mode_(in_model_operation)"]
         if setting == "0":
             poolingLayer = poolingLayer_wrapper(cfgDict)
             singleLayer.getCONVInputShape('conv')
             input_name_lst = []
             convOpsName = singleLayer.construct_input('conv')
+
+            if layeridx !=1: convOpsName = prevalueinfo
+            
             if singleLayer.check_slice(): # and singleLayer.cfgDict["op_mode"] = '0' and singleLayer.cfgDict["pool_mode"] != '0':
                 if singleLayer.cfgDict["op"] == '0' and singleLayer.cfgDict["pool_mode"] == '0':
                     pass
@@ -289,7 +294,7 @@ def buildSingleLayerONNX(cfgDict, needflatten=True):
             singleLayer.node_list += output[0] # 	output_node_lst = output[0]
 
         singleLayer.values_out.append(singleLayer.values_info[-1])
-        singleLayer.output_shape = output[2]
+        # singleLayer.output_shape = output[2]
 
 
         bitmode = dict(zip(['0', '1', '2', '3'], [8, 15, 8, 16]))

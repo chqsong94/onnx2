@@ -12,18 +12,26 @@ from single_layer import buildSingleLayerONNX
 
 
 def buildMultiLayerONNX(cfgDict1, cfgDict2):
-    _, singleLayer1 = buildSingleLayerONNX(cfgDict1)
+    jsonfile1, singleLayer1 = buildSingleLayerONNX(cfgDict1, layeridx=1, )
 
-    _, singleLayer2 = buildSingleLayerONNX(cfgDict2, False)
+    jsonfile2, singleLayer2 = buildSingleLayerONNX(cfgDict2, layeridx=2, prevalueinfo=[singleLayer1.values_out[0].name])
+
 
     my_node_list = singleLayer1.node_list + singleLayer2.node_list
-    my_values_in = singleLayer1.values_in + singleLayer2.values_in
-    my_values_out= singleLayer1.values_out+ singleLayer2.values_out
-    my_values_info=singleLayer1.values_info+singleLayer2.values_info
+
+    my_values_in = singleLayer1.values_in
+    if singleLayer2.cfgDict["conv_mode_in_hw_setting"] in ["11", "16"] and singleLayer2.cfgDict["conv/pfunc"] == "CONV":
+        my_values_in.append( singleLayer2.values_in[-1])
+
+
+    my_values_out= singleLayer2.values_out
+    my_values_info=singleLayer1.values_info+singleLayer2.values_info[1:]
     MutiLayer = namedtuple("MultiLayer", ["node_list", "cfgDict", "values_in", "values_out" , "values_info"])
 
     muti_layer = MutiLayer(my_node_list, cfgDict2, my_values_in, my_values_out, my_values_info)
-    return muti_layer
+
+    jsonfile = {**jsonfile1, **jsonfile2}
+    return jsonfile, muti_layer
 
 
 
