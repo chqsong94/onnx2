@@ -89,7 +89,9 @@ def genTestCase_single(cfgList,dir_output):
         shutil.rmtree(dir_output)
     os.makedirs(dir_output)
     for cfgDict in cfgList:
-        model_name = '{:05d}'.format(int(cfgDict["test_case_number"])) + '_' + cfgDict["test_case_notes"]   #changed
+        model_name = '{:05d}'.format(int(cfgDict["test_case_number"])) + '_' + \
+        cfgDict["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")   #changed
+
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
         os.mkdir(dir_output + "/" + model_name)
         
@@ -111,7 +113,9 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
     os.makedirs(dir_output)
 
     for cfgDict1, cfgDict2 in zip(cfgList1, cfgList2):
-        model_name = '{:04d}'.format(int(cfgDict1["test_case_number"])) + '_' + cfgDict1["test_case_notes"] + " AND " + cfgDict2["test_case_notes"]
+        model_name = '{:05d}'.format(int(cfgDict1["test_case_number"])) + '_' + \
+        cfgDict1["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_") + "_AND_" + \
+        cfgDict2["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")
         
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
         os.mkdir(dir_output + "/" + model_name)
@@ -138,30 +142,32 @@ if __name__ == "__main__":
         output_path = "."
         # configs = get_config(version+1, test_plan)
         configs = OrderedDict()
+        test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
         configs['fn_excel'] = test_plan
         configs['sheet_name'] = 'Sheet1' 
-        configs['version'] = 'v7{:02d}'.format(version+1)    #offset changed
+        configs['version'] = 'v2{:02d}'.format(version+1)    #offset changed
         testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
 
         cfgList1 = readTestCase(testCasesFileName, sheet_name='layer1')
-     
         cfgList2 = readTestCase(testCasesFileName, sheet_name='layer2')
-        dir_output = "{}/gen_test_cases_multi/test_cases_{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
-
+        dir_output = "{}/gen_test_cases_multi/{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
         genTestCase_multi(cfgList1, cfgList2, dir_output)
 
-        excel_path="./single_layer_test_case"
-        for version, test_plan in enumerate(os.listdir(excel_path)):
-            print(version, test_plan)
-            if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
-                continue
-            output_path = "."
-            # configs = get_config(version+1, test_plan)
-            configs = OrderedDict()
-            configs['fn_excel'] = test_plan
-            configs['sheet_name'] = 'Sheet1' 
-            configs['version'] = 'v7{:02d}'.format(version+1)   #offset changed
-            testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
-            cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
-            dir_output = "{}/gen_test_cases_single/test_cases_{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
-            genTestCase_single(cfgList, dir_output)
+
+    excel_path="./single_layer_test_case"
+    for version, test_plan in enumerate(os.listdir(excel_path)):
+        print(version, test_plan)
+        if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
+            continue
+        output_path = "."
+        # configs = get_config(version+1, test_plan)
+
+        configs = OrderedDict()
+        test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
+        configs['fn_excel'] = test_plan
+        configs['sheet_name'] = 'Sheet1' 
+        configs['version'] = 'v1{:02d}'.format(version+1)   #offset changed
+        testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
+        cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
+        dir_output = "{}/gen_test_cases_single/{}_{}".format(output_path, configs['version'], configs['fn_excel'].split('.')[0])
+        genTestCase_single(cfgList, dir_output)

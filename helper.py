@@ -24,17 +24,17 @@ class CreateConvOps():
 		self.values_info = []
 		self.cfgDict = cfgDict
 
-		self.x1 = int(float(self.cfgDict['col_st']))
-		self.y1 = int(float(self.cfgDict['row_st']))
+		self.col1 = int(float(self.cfgDict['col_st']))
+		self.row1 = int(float(self.cfgDict['row_st']))
 
-		self.x2 = int(self.cfgDict["input_size_w_(col)"]) if int(float(self.cfgDict['col_out']))==0 else self.x1 + int(float(self.cfgDict['col_out']))
-		self.y2 = int(self.cfgDict["input_size_h_(row)"]) if int(float(self.cfgDict['row_out']))==0 else self.y1 + int(float(self.cfgDict['row_out']))
+		self.col2 = int(self.cfgDict["input_size_w_(col)"]) if int(float(self.cfgDict['col_out']))==0 else self.col1 + int(float(self.cfgDict['col_out']))
+		self.row2 = int(self.cfgDict["input_size_h_(row)"]) if int(float(self.cfgDict['row_out']))==0 else self.row1 + int(float(self.cfgDict['row_out']))
 		
 		
 		self.kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
 	
 	def check_slice(self):
-		if (self.x1 + self.y1 + self.x2 + self.y2) ==0:
+		if (self.col1 + self.row1 + int(float(self.cfgDict['col_out'])) + int(float(self.cfgDict['row_out'])) ) == 0:
 			flag = False
 		else: flag = True
 		return flag
@@ -73,29 +73,29 @@ class CreateConvOps():
 
 	def construct_slice(self, testType, input_name_lst):
 		# print(input_name_lst)
-		self.input_shape = (1, self.input_shape[1], self.x2-self.x1, self.y2-self.y1)
+		self.input_shape = (1, self.input_shape[1], self.row2-self.row1, self.col2-self.col1)
 		if len(input_name_lst)==1:
 			slice_node = O.helper.make_node(
 				op_type = 'Slice',
 				inputs = input_name_lst,
 				outputs = ['slice_out' + testType],
-				starts= np.array([0, 0, self.x1, self.y1], dtype=np.int64),
-				ends= np.array([1, self.input_shape[1], self.x2, self.y2], dtype=np.int64),
+				starts= np.array([0, 0, self.row1, self.col1], dtype=np.int64),
+				ends= np.array([1, self.input_shape[1], self.row2, self.col2], dtype=np.int64),
 				name=testType+"slice"
 				)
-			#print(11111111111111111111111111111111111111)
+	
 			self.node_list.append(slice_node)
 			output = O.helper.make_tensor_value_info('slice_out'+testType, O.TensorProto.FLOAT, list(self.input_shape))
 			self.values_info.append(output)	
 			output_name = ['slice_out' + testType]
 
-		else:
+		else: # has two inputs
 			slice_node1 = O.helper.make_node(
 				op_type = 'Slice',
 				inputs = [input_name_lst[0]],
 				outputs = ['slice_out1' + testType],
-				starts= np.array([0, 0, self.x1, self.y1], dtype=np.int64),
-				ends= np.array([0, self.input_shape[1], self.x2, self.y2], dtype=np.int64),
+				starts= np.array([0, 0, self.row1, self.col1], dtype=np.int64),
+				ends= np.array([0, self.input_shape[1], self.row2, self.col2], dtype=np.int64),
 				name=testType+"slice1"
 				)
 
@@ -107,8 +107,8 @@ class CreateConvOps():
 				op_type = 'Slice',
 				inputs = [input_name_lst[1]],
 				outputs = ['slice_out2' + testType],
-				starts= np.array([0, 0, self.x1, self.y1], dtype=np.int64),
-				ends= np.array([0, self.input_shape[1], self.x2, self.y2], dtype=np.int64),
+				starts= np.array([0, 0, self.row1, self.col1], dtype=np.int64),
+				ends= np.array([0, self.input_shape[1], self.row2, self.col2], dtype=np.int64),
 				name= testType+"slice2"
 				)
 			self.node_list.append(slice_node2)
