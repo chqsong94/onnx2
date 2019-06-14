@@ -14,7 +14,7 @@ from single_layer import buildSingleLayerONNX
 def buildMultiLayerONNX(cfgDict1, cfgDict2):
     jsonfile1, singleLayer1 = buildSingleLayerONNX(cfgDict1, layeridx=1, )
 
-    jsonfile2, singleLayer2 = buildSingleLayerONNX(cfgDict2, layeridx=2, prevalueinfo=[singleLayer1.values_out[0].name])
+    jsonfile2, singleLayer2 = buildSingleLayerONNX(cfgDict2, layeridx=2, prevalueinfo=singleLayer1.values_out[0])
 
 
     my_node_list = singleLayer1.node_list + singleLayer2.node_list

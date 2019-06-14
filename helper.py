@@ -145,14 +145,32 @@ class CreateConvOps():
 	def construct_weights(self, testType, mode, channelsPerGroup =1):
 		if mode == 'dense':
 			weights_shape = [self.num_channels, self.input_shape[1]*self.input_shape[2]*self.input_shape[3]]
+			weights_value = np.ones(shape=weights_shape).ravel()
 		elif mode == 'conv': #conv
 			weights_shape = [self.output_shape[1], self.input_shape[1], self.kernel_size[0], self.kernel_size[1]]
+			if self.kernel_size[0]*self.kernel_size[1] == 1:
+				a = np.ones(self.kernel_size[0]*self.kernel_size[1]).reshape(self.kernel_size[0],self.kernel_size[1])
+			else :
+				a = np.arange(self.kernel_size[0]*self.kernel_size[1]).reshape(self.kernel_size[0],self.kernel_size[1])
+			a = np.repeat(a[:, :, np.newaxis], self.input_shape[1], axis=2)
+			a = np.repeat(a[:, :, :, np.newaxis], self.output_shape[1], axis=3)
+			weights_value = a.ravel()
+
 		elif mode == 'group':
 			weights_shape = [self.output_shape[1], channelsPerGroup,  self.kernel_size[0], self.kernel_size[1]]
-
+			if self.kernel_size[0]*self.kernel_size[1] == 1:
+				a = np.ones(self.kernel_size[0]*self.kernel_size[1]).reshape(self.kernel_size[0],self.kernel_size[1])
+			else :
+				a = np.arange(self.kernel_size[0]*self.kernel_size[1]).reshape(self.kernel_size[0],self.kernel_size[1])
+			a = np.repeat(a[:, :, np.newaxis], channelsPerGroup, axis=2)
+			a = np.repeat(a[:, :, :, np.newaxis], self.output_shape[1], axis=3)
+			weights_value = a.ravel()
 		else: raise "no such mode"
+
+		
+		# weights_value = np.random.normal(size=weights_shape).ravel()
 		w_info =  O.helper.make_tensor_value_info('weights'+testType, O.TensorProto.FLOAT, list(weights_shape))
-		weights_tensor = O.helper.make_tensor('weights_tensor', O.TensorProto.FLOAT, weights_shape, np.random.normal(size=weights_shape).ravel())
+		weights_tensor = O.helper.make_tensor('weights_tensor', O.TensorProto.FLOAT, weights_shape, weights_value)
 		w_node = O.helper.make_node(
 		op_type = "Constant",
 		inputs = [],
@@ -468,7 +486,7 @@ def reluLayer_wrapper(cfgDict):
 			outputs = ['output_relu_info'+testType],
 			name = testType
 			)			
-		elif relu_mode == 1:
+		elif relu_mode == 2:
 			slope_relu_info = O.helper.make_tensor_value_info('slope_relu_info'+testType, O.TensorProto.FLOAT, list(input_relu_shape[1:]))
 			slope_relu_tensor = O.helper.make_tensor('slope_relu_tensor', O.TensorProto.FLOAT, 
 				list(input_relu_shape[1:]), np.random.normal(size =input_relu_shape[1]))
@@ -488,7 +506,7 @@ def reluLayer_wrapper(cfgDict):
 			outputs = ['output_relu_info'+testType],
 			name = testType
 			)
-		elif relu_mode == 2:
+		elif relu_mode == 3:
 			node_relu = O.helper.make_node(
 			'Clip',
 			inputs=[input_str_info],
@@ -497,21 +515,21 @@ def reluLayer_wrapper(cfgDict):
 			max= 6.0 if relu6_clamp != "MAX" else 8.0,
 			name = testType
 			)
-		elif relu_mode == 3:
+		elif relu_mode == 4:
 			node_relu = O.helper.make_node(
 			'Sigmoid',
 			inputs=[input_str_info],
 			outputs=['output_relu_info'+testType],
 			name = testType
 			)
-		elif relu_mode == 4:
+		elif relu_mode == 5:
 			node_relu = O.helper.make_node(
 			'Tanh',
 			inputs=[input_str_info],
 			outputs=['output_relu_info'+testType],
 			name = testType
 			)
-		elif relu_mode == 5:
+		elif relu_mode == 1:
 			node_relu = O.helper.make_node(
 			op_type = 'LeakyRelu',
 			inputs=[input_str_info],
