@@ -30,8 +30,8 @@ class CreateConvOps():
 		self.col2 = int(self.cfgDict["input_size_w_(col)"]) if int(float(self.cfgDict['col_out']))==0 else self.col1 + int(float(self.cfgDict['col_out']))
 		self.row2 = int(self.cfgDict["input_size_h_(row)"]) if int(float(self.cfgDict['row_out']))==0 else self.row1 + int(float(self.cfgDict['row_out']))
 		
-		
-		self.kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
+
+		self.kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
 	
 	def check_slice(self):
 		if (self.col1 + self.row1 + int(float(self.cfgDict['col_out'])) + int(float(self.cfgDict['row_out'])) ) == 0:
@@ -45,7 +45,7 @@ class CreateConvOps():
 		self.paddingBottom = int(self.cfgDict['dn_padding_b'])
 		self.paddingLeft = int(self.cfgDict['left_padding_l'])
 		self.paddingRight = int(self.cfgDict['right_padding_r'])
-		self.padding_info = [0, 0, self.paddingTop, self.paddingLeft, 0, 0, self.paddingBottom, self.paddingRight]
+		self.padding_info = [ self.paddingTop, self.paddingLeft, self.paddingBottom, self.paddingRight]
 	
 	
 	def getCONVInputShape(self, mode):
@@ -132,12 +132,18 @@ class CreateConvOps():
 
 		elif mode in ['add', 'bypass', 'bn']:
 			self.output_shape = self.input_shape
-			self.kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
+			self.kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
 		elif mode == 'conv':	
-			self.kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
+			self.kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
 			strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))
 			output_rows = int((self.input_shape[2] - self.kernel_size[0] + self.paddingTop + self.paddingBottom)/strides[0] + 1)
 			output_cols = int((self.input_shape[3] - self.kernel_size[1] + self.paddingRight + self.paddingLeft)/strides[1] + 1)
+			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
+		elif mode == 'deconv':
+			self.kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
+			strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))
+			output_rows = int((self.input_shape[2] - 1) * strides[0] + self.kernel_size[0])
+			output_cols = int((self.input_shape[3] - 1) * strides[1] + self.kernel_size[1])
 			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
 		else: raise "no such mode"
 
@@ -168,7 +174,7 @@ class CreateConvOps():
 		else: raise "no such mode"
 
 		
-		# weights_value = np.random.normal(size=weights_shape).ravel()
+		weights_value = np.random.normal(size=weights_shape).ravel()
 		w_info =  O.helper.make_tensor_value_info('weights'+testType, O.TensorProto.FLOAT, list(weights_shape))
 		weights_tensor = O.helper.make_tensor('weights_tensor', O.TensorProto.FLOAT, weights_shape, weights_value)
 		w_node = O.helper.make_node(
@@ -208,30 +214,30 @@ class CreateConvOps():
 		return output_name
 		
 
-	# def construct_pad(self, input_name_lst):
-	# 	# this is stand alone pad
-	# 	pad_node = O.helper.make_node(
-	# 	op_type = 'Pad', # node name
-	# 	inputs = input_name_lst, # inputs
-	# 	outputs = ['padding'], # outputs
-	# 	#mode='constant', # Attributes
-	# 	name='padding_1',
-	# 	pads=self.padding_info,
-	# 	)
-	# 	self.node_list.append(pad_node)
+	def construct_pad(self, testType, input_name_lst):
+		# this is stand alone pad
+		pad_node = O.helper.make_node(
+		op_type = 'Pad', # node name
+		inputs = input_name_lst, # inputs
+		outputs = [testType+'padding'], # outputs
+		#mode='constant', # Attributes
+		name=testType,
+		pads=self.padding_info,
+		)
+		self.node_list.append(pad_node)
 
-	# 	after_pad_col = int(self.input_shape[2] + self.paddingLeft + self.paddingRight)
-	# 	after_pad_row = int(self.input_shape[3] + self.paddingTop + self.paddingBottom)
-	# 	self.input_shape = [self.input_shape[0], self.input_shape[1], after_pad_row, after_pad_col]
+		after_pad_col = int(self.input_shape[2] + self.paddingLeft + self.paddingRight)
+		after_pad_row = int(self.input_shape[3] + self.paddingTop + self.paddingBottom)
+		self.input_shape = [self.input_shape[0], self.input_shape[1], after_pad_row, after_pad_col]
 
-	# 	pad_info = O.helper.make_tensor_value_info('padding', O.TensorProto.FLOAT, self.input_shape)
-	# 	self.values_info.append(pad_info)
-	# 	output_name = ['padding']
-	# 	return output_name
+		pad_info = O.helper.make_tensor_value_info(testType+'padding', O.TensorProto.FLOAT, self.input_shape)
+		self.values_info.append(pad_info)
+		output_name = [testType+'padding']
+		return output_name
 	
 
 	def construct_conv3x3(self, testType, input_name_lst):
-		kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
+		kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
 		strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))
 		conv_node = O.helper.make_node(
 		op_type = 'Conv',
@@ -251,7 +257,7 @@ class CreateConvOps():
 
 
 	def construct_group_conv3x3(self, testType, input_name_lst, channelsPerGroup):
-		kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
+		kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
 		strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))	
 		group_conv_node = O.helper.make_node(
 		op_type = 'Conv',
@@ -271,7 +277,7 @@ class CreateConvOps():
 
 
 	def construct_deconv(self, testType, input_name):
-		kernel_size = (int(self.cfgDict["kernel_size_w"]), int(self.cfgDict["kernel_size_h"]))
+		kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
 		strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))		
 		deconv_node = O.helper.make_node(
 			op_type = 'ConvTranspose',
@@ -280,7 +286,7 @@ class CreateConvOps():
 			name = str(testType),
 			group = 1,
 			kernel_shape=list(kernel_size),
-			pads=self.padding_info,
+			pads=[self.kernel_size[0]-1, self.kernel_size[1]-1, self.kernel_size[0]-1, self.kernel_size[1]-1],
 			strides=list(strides),
 			)
 		self.node_list.append(deconv_node)
@@ -400,7 +406,7 @@ class CreateConvOps():
 		# var
 		var_bn_info = O.helper.make_tensor_value_info('var_bn_info'+testType, O.TensorProto.FLOAT, [input_bn_shape[1]])
 		var_bn_tensor = O.helper.make_tensor('var_bn_tensor', O.TensorProto.FLOAT, 
-		[input_bn_shape[1]], np.random.normal(size =input_bn_shape[1]))
+		[input_bn_shape[1]], abs(np.random.normal(size =input_bn_shape[1])))
 		node_var_bn = O.helper.make_node( 
 		op_type='Constant',
 		inputs=[],
@@ -416,10 +422,10 @@ class CreateConvOps():
 		inputs=input_str_info + ['scale_bn_info'+testType, 'bias_bn_info'+testType, 'mean_bn_info'+testType, 'var_bn_info'+testType],
 		outputs=['output_bn_info'+testType],
 		name=testType,
-		# epsilon=self.layer.epsilon,
-		# momentum=self.layer.momentum,
-		#spatial=1,
-		#is_test=1
+		epsilon=1e-05,
+		momentum=0.9,
+		# spatial=1,
+		# is_test=1
 		)
 		self.node_list.append(node_bn)
 		self.values_info.append(output_bn_info)
@@ -594,7 +600,7 @@ def poolingLayer_wrapper(cfgDict):
 		paddingBottom = int(cfgDict['pool_padding_dn'])
 		paddingLeft = int(cfgDict['pool_padding_left'])
 		paddingRight = int(cfgDict['pool_padding_right'])
-		padding_info = [0, 0, paddingTop, paddingLeft, 0, 0, paddingBottom, paddingRight]
+		padding_info = [ paddingTop, paddingLeft, paddingBottom, paddingRight]
 
 		op_mode = cfgDict["op"]
 		pool_mode = cfgDict["pool_mode"]
@@ -633,8 +639,15 @@ def poolingLayer_wrapper(cfgDict):
 				value_info_lst.append(rois_info)
 
 				# now calculate pooled shape
-				height = int(cfgDict["roi_pooling_row_cnt"]) if int(cfgDict["input_size_h_(row)"]) % int(cfgDict["roi_pooling_row_cnt"]) == 0 else int(cfgDict["roi_pooling_row_cnt"]) + 1
-				width = int(cfgDict["roi_pooling_col_cnt"]) if int(cfgDict["input_size_w_(col)"]) % int(cfgDict["roi_pooling_col_cnt"]) == 0 else int(cfgDict["roi_pooling_col_cnt"]) + 1
+			
+				if int(cfgDict["roi_pooling_row_cnt"]) ==0:
+					height = 1
+				else:
+					height = int(cfgDict["roi_pooling_row_cnt"]) if int(cfgDict["input_size_h_(row)"]) % int(cfgDict["roi_pooling_row_cnt"]) == 0 else int(cfgDict["roi_pooling_row_cnt"]) + 1
+				if int(cfgDict["roi_pooling_col_cnt"]) ==0:
+					width = 1
+				else:
+					width = int(cfgDict["roi_pooling_col_cnt"]) if int(cfgDict["input_size_w_(col)"]) % int(cfgDict["roi_pooling_col_cnt"]) == 0 else int(cfgDict["roi_pooling_col_cnt"]) + 1
 				output_pool_shape = (input_pool_shape[0], input_pool_shape[1], height, width)
 				output_pool_info = O.helper.make_tensor_value_info('output_pool_info'+testType, O.TensorProto.FLOAT, list(output_pool_shape))
 

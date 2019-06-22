@@ -94,7 +94,10 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
-            singleLayer.getCONVOutputShape('conv')
+            if sum(singleLayer.padding_info) != 0:
+                input_name_lst = singleLayer.construct_pad(testType, input_name_lst)
+            
+            singleLayer.getCONVOutputShape('deconv')
             input_name_lst += singleLayer.construct_weights(testType, 'conv')
             if int(cfgDict["bias_en"]):
                 input_name_lst += singleLayer.construct_bias(testType, 'conv')
