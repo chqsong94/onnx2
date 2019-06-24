@@ -93,17 +93,24 @@ def genTestCase_single(cfgList,dir_output):
         cfgDict["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")   #changed
 
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
-        os.mkdir(dir_output + "/" + model_name)
         
         print('creating ' + model_name)
         my_jsonfile1 = getJson(cfgDict, model_name)
         my_jsonfile2, mysingleLayer = buildSingleLayerONNX(cfgDict, 1)
         model = helper.getModel(mysingleLayer)
         O.checker.check_model(model)
+
+        value_info_shape_lst=[] # FOR this model
+        for value_info in model.graph.value_info:
+            for i in value_info.type.tensor_type.shape.dim:
+                value_info_shape_lst.append(i.dim_value)
+        if  any(i <= 0 for i in value_info_shape_lst) or (mysingleLayer.values_in == mysingleLayer.values_out):
+            continue
+
+        os.mkdir(dir_output + "/" + model_name)
         data = {**my_jsonfile1, **my_jsonfile2} 
         with open(dir_output+'/'+ model_name+'/'+'testcase.json', 'w') as outfile:  
             json.dump(data, outfile, indent=4)
-
         O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
 
 
@@ -118,7 +125,7 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
         cfgDict2["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")
         
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
-        os.mkdir(dir_output + "/" + model_name)
+
         print('creating ' + model_name)
         data1 = getJson(cfgDict1, model_name)
         data2 = getJson(cfgDict2, model_name, "2")
@@ -126,11 +133,16 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
         
         model = helper.getModel(mymultiLayer)
         O.checker.check_model(model)
-
+        value_info_shape_lst=[]
+        for value_info in model.graph.value_info:
+            for i in value_info.type.tensor_type.shape.dim:
+                value_info_shape_lst.append(i.dim_value)
+        if  any(i <= 0 for i in value_info_shape_lst) or (mymultiLayer.values_in == mymultiLayer.values_out):
+            continue
+        os.mkdir(dir_output + "/" + model_name)
         data = {**data1, **data2, **my_jsonfile}
         with open(dir_output+'/'+ model_name+'/'+'testcase.json', 'w') as outfile:  
             json.dump(data, outfile, indent=4)
-
         O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
 
 
