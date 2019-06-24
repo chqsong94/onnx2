@@ -221,7 +221,7 @@ class CreateConvOps():
 		inputs = input_name_lst, # inputs
 		outputs = [testType+'padding'], # outputs
 		#mode='constant', # Attributes
-		name=testType,
+		name=testType + 'pad',
 		pads=self.padding_info,
 		)
 		self.node_list.append(pad_node)
