@@ -98,7 +98,7 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
                 input_name_lst = singleLayer.construct_pad(testType, input_name_lst)
             
             singleLayer.getCONVOutputShape('deconv')
-            input_name_lst += singleLayer.construct_weights(testType, 'conv')
+            input_name_lst += singleLayer.construct_weights(testType, 'deconv')
             if int(cfgDict["bias_en"]):
                 input_name_lst += singleLayer.construct_bias(testType, 'conv')
             convOpsName = singleLayer.construct_deconv(testType, input_name_lst)

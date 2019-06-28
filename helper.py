@@ -145,6 +145,11 @@ class CreateConvOps():
 			output_rows = int((self.input_shape[2] - 1) * strides[0] + self.kernel_size[0])
 			output_cols = int((self.input_shape[3] - 1) * strides[1] + self.kernel_size[1])
 			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
+
+		# strides = (2, 2)
+		# expanded_row = (self.input_shape[2] - 1) * (strides[0] -1) + self.input_shape[2]
+		# expanded_col = (self.input_shape[3] - 1) * (strides[0] -1) + self.input_shape[3]
+
 		else: raise "no such mode"
 
 
@@ -171,6 +176,18 @@ class CreateConvOps():
 			a = np.repeat(a[:, :, np.newaxis], channelsPerGroup, axis=2)
 			a = np.repeat(a[:, :, :, np.newaxis], self.output_shape[1], axis=3)
 			weights_value = a.ravel()
+
+
+		elif mode == 'deconv': #conv
+			weights_shape = [self.input_shape[1], self.output_shape[1], self.kernel_size[0], self.kernel_size[1]]
+			if self.kernel_size[0]*self.kernel_size[1] == 1:
+				a = np.ones(self.kernel_size[0]*self.kernel_size[1]).reshape(self.kernel_size[0],self.kernel_size[1])
+			else :
+				a = np.arange(self.kernel_size[0]*self.kernel_size[1]).reshape(self.kernel_size[0],self.kernel_size[1])
+			a = np.repeat(a[:, :, np.newaxis], self.input_shape[1], axis=2)
+			a = np.repeat(a[:, :, :, np.newaxis], self.output_shape[1], axis=3)
+			weights_value = a.ravel()
+
 		else: raise "no such mode"
 
 		
@@ -222,12 +239,13 @@ class CreateConvOps():
 		outputs = [testType+'padding'], # outputs
 		#mode='constant', # Attributes
 		name=testType + 'pad',
-		pads=self.padding_info,
+		pads=[0,0, self.padding_info[0], self.padding_info[1], 0, 0, self.padding_info[2], self.padding_info[3]]
 		)
 		self.node_list.append(pad_node)
 
-		after_pad_col = int(self.input_shape[2] + self.paddingLeft + self.paddingRight)
-		after_pad_row = int(self.input_shape[3] + self.paddingTop + self.paddingBottom)
+		after_pad_col = int(self.input_shape[2] + self.paddingTop + self.paddingBottom)
+		after_pad_row = int(self.input_shape[3] + self.paddingLeft + self.paddingRight)
+
 		self.input_shape = [self.input_shape[0], self.input_shape[1], after_pad_row, after_pad_col]
 
 		pad_info = O.helper.make_tensor_value_info(testType+'padding', O.TensorProto.FLOAT, self.input_shape)
@@ -615,16 +633,25 @@ def poolingLayer_wrapper(cfgDict):
 				x2 = x1 + int(cfgDict['col_out'])
 				y2 = y1 + int(cfgDict['row_out'])
 
-				if (x1 + x2) ==0:
-					if (y1 + y2) == 0:
-						loc = np.array([ [0, 0, 0, input_pool_shape[3], input_pool_shape[2]] ])
-					else:
-						loc = np.array([ [0, 0, y1, input_pool_shape[3], y2] ])
+				# if (x1 + x2) ==0:
+				# 	if (y1 + y2) == 0:
+				# 		loc = np.array([ [0, 0, 0, input_pool_shape[3], input_pool_shape[2]] ])
+				# 	else:
+				# 		loc = np.array([ [0, 0, y1, input_pool_shape[3], y2] ])
+				# else:
+				# 	if (y1 + y2) == 0:
+				# 		loc = np.array([ [0, x1, 0, x2, input_pool_shape[2]] ])
+				# 	else:
+				# 		loc = np.array([[0, x1, y1, x2, y2]])
+
+				if int(cfgDict['col_out']) ==0 and int(cfgDict['row_out']) !=0:
+					loc = np.array([ [0, x1, y1, input_pool_shape[3], y2] ])
+				elif int(cfgDict['row_out']) ==0 and int(cfgDict['col_out']) !=0:
+					loc = np.array([ [0, x1, y1, x2, input_pool_shape[2]] ])
+				elif int(cfgDict['col_out'])==0 and int(cfgDict['row_out']) ==0:
+					loc = np.array([ [0, x1, y1, input_pool_shape[3], input_pool_shape[2]] ])
 				else:
-					if (y1 + y2) == 0:
-						loc = np.array([ [0, x1, 0, x2, input_pool_shape[2]] ])
-					else:
-						loc = np.array([[0, x1, y1, x2, y2]])
+					loc = np.array([[0, x1, y1, x2, y2]])
 				
 				rois_info = O.helper.make_tensor_value_info('rois_info'+testType, O.TensorProto.FLOAT, [1, 5])
 				rois_tensor = O.helper.make_tensor('rois_tensor', O.TensorProto.FLOAT, [1, 5], loc.ravel())
