@@ -239,12 +239,13 @@ class CreateConvOps():
 		outputs = [testType+'padding'], # outputs
 		#mode='constant', # Attributes
 		name=testType + 'pad',
-		pads=[0,0, self.padding_info[0], self.padding_info[1], 0, 0, self.padding_info[2], self.padding_info[3]]
+		pads=[0,0, self.paddingTop, self.paddingLeft, 0, 0, self.paddingBottom, self.paddingRight]
 		)
 		self.node_list.append(pad_node)
 
-		after_pad_col = int(self.input_shape[2] + self.paddingTop + self.paddingBottom)
-		after_pad_row = int(self.input_shape[3] + self.paddingLeft + self.paddingRight)
+
+		after_pad_col = int(self.input_shape[3] + self.paddingLeft + self.paddingRight)
+		after_pad_row = int(self.input_shape[2] + self.paddingTop + self.paddingBottom)
 
 		self.input_shape = [self.input_shape[0], self.input_shape[1], after_pad_row, after_pad_col]
 
