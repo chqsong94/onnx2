@@ -149,37 +149,37 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
 if __name__ == "__main__":
     np.random.seed(8)
     excel_path="./multi_layer_test_case"
-    for version, test_plan in enumerate(os.listdir(excel_path)):
-        # if test_plan == "multi":
-        output_path = "."
-        # configs = get_config(version+1, test_plan)
-        configs = OrderedDict()
-        test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
-        configs['fn_excel'] = test_plan
-        configs['sheet_name'] = 'Sheet1' 
-        configs['version'] = 'v2{:02d}'.format(version+1)    #offset changed
-        testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
+    # for version, test_plan in enumerate(os.listdir(excel_path)):
+    #     # if test_plan == "multi":
+    #     output_path = "."
+ 
+    #     configs = OrderedDict()
+    #     test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
+    #     configs['fn_excel'] = test_plan
+    #     configs['sheet_name'] = 'Sheet1' 
+    #     configs['version'] = 'v2{:02d}'.format(version+1)    #offset changed
+    #     testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
 
-        cfgList1 = readTestCase(testCasesFileName, sheet_name='layer1')
-        cfgList2 = readTestCase(testCasesFileName, sheet_name='layer2')
-        dir_output = "{}/gen_test_cases_multi/{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
-        genTestCase_multi(cfgList1, cfgList2, dir_output)
+    #     cfgList1 = readTestCase(testCasesFileName, sheet_name='layer1')
+    #     cfgList2 = readTestCase(testCasesFileName, sheet_name='layer2')
+    #     dir_output = "{}/gen_test_cases_multi/{}_{}".format(output_path, configs['version'],    configs['fn_excel'].split('.')[0]    )
+    #     genTestCase_multi(cfgList1, cfgList2, dir_output)
 
 
-    excel_path="./single_layer_test_case"
-    for version, test_plan in enumerate(os.listdir(excel_path)):
-        print(version, test_plan)
-        if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
-            continue
-        output_path = "."
-        # configs = get_config(version+1, test_plan)
+    # excel_path="./single_layer_test_case_base_8b_deweight"
+    # for version, test_plan in enumerate(os.listdir(excel_path)):
+    #     print(version, test_plan)
+    #     if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
+    #         continue
+    #     output_path = "."
 
-        configs = OrderedDict()
-        test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
-        configs['fn_excel'] = test_plan
-        configs['sheet_name'] = 'Sheet1' 
-        configs['version'] = 'v1{:02d}'.format(version+1)   #offset changed
-        testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
-        cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
-        dir_output = "{}/gen_test_cases_single/{}_{}".format(output_path, configs['version'], configs['fn_excel'].split('.')[0])
-        genTestCase_single(cfgList, dir_output)
+    #     configs = OrderedDict()
+    #     test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
+    #     configs['fn_excel'] = test_plan
+    #     configs['sheet_name'] = 'Sheet1' 
+    #     configs['version'] = 'v1{:02d}'.format(version+1)   #offset changed
+    #     testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
+    #     cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
+    #     dir_output = "{}/gen_single_layer_test_case_base_8b_deweight/{}_{}".format(output_path, configs['version'], configs['fn_excel'].split('.')[0])
+    #     genTestCase_single(cfgList, dir_output)
+    print(os.listdir(excel_path))

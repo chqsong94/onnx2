@@ -369,21 +369,51 @@
 #         # perform same transaction process 10 times 
 #         perform_transactions() 
 
-import multiprocessing 
-import os 
+# import multiprocessing 
+# import os 
   
-def square(n): 
-    print("Worker process id for {0}: {1}".format(n, os.getpid())) 
-    return (n*n) 
+# def square(n): 
+#     print("Worker process id for {0}: {1}".format(n, os.getpid())) 
+#     return (n*n) 
   
-if __name__ == "__main__": 
-    # input list 
-    mylist = {1,2,3,4,5} 
+# if __name__ == "__main__": 
+#     # input list 
+#     mylist = {1,2,3,4,5} 
   
-    # creating a pool object 
-    p = multiprocessing.Pool() 
+#     # creating a pool object 
+#     p = multiprocessing.Pool() 
   
-    # map list to target function 
-    result = p.map(square, mylist) 
-    print(type(result))
-    print(result) 
+#     # map list to target function 
+#     result = p.map(square, mylist) 
+#     print(type(result))
+#     print(result) 
+
+
+result = []
+
+def add():
+    global result
+    result.append(1)
+    print(result)
+
+add()
+print(result)
+
+
+
+
+# result = [] 
+  
+# def square_list(mylist): 
+#     """ 
+#     function to square a given list 
+#     """
+#     global result 
+#     # append squares of mylist to global list result 
+#     for num in mylist: 
+#         result.append(num * num) 
+#     # print global list result 
+#     print("Result(in process p1): {}".format(result)) 
+
+# square_list([1,2])
+# print(result)

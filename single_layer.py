@@ -94,8 +94,8 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
             if singleLayer.check_slice(): 
                 input_name_lst = singleLayer.construct_slice(testType, input_name_lst)
             singleLayer.getPaddingInfo()
-            if sum(singleLayer.padding_info) != 0:
-                input_name_lst = singleLayer.construct_pad(testType, input_name_lst)
+            # if sum(singleLayer.padding_info) != 0:
+            #     input_name_lst = singleLayer.construct_pad(testType, input_name_lst)
             
             singleLayer.getCONVOutputShape('deconv')
             input_name_lst += singleLayer.construct_weights(testType, 'deconv')

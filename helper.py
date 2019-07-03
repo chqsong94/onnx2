@@ -141,14 +141,16 @@ class CreateConvOps():
 			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
 		elif mode == 'deconv':
 			self.kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
-			strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))
-			output_rows = int((self.input_shape[2] - 1) * strides[0] + self.kernel_size[0])
-			output_cols = int((self.input_shape[3] - 1) * strides[1] + self.kernel_size[1])
+			# strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))
+			# output_rows = int((self.input_shape[2] - 1) * strides[0] + self.kernel_size[0])
+			# output_cols = int((self.input_shape[3] - 1) * strides[1] + self.kernel_size[1])
+			# self.output_shape = (1,  self.num_channels, output_rows, output_cols)
+			strides = (2, 2)
+			expanded_row = (self.input_shape[2] - 1) * (strides[0] -1) + self.input_shape[2]
+			expanded_col = (self.input_shape[3] - 1) * (strides[0] -1) + self.input_shape[3]
+			output_rows = int((expanded_row - self.kernel_size[0] + self.paddingTop + self.paddingBottom)/1 + 1)
+			output_cols = int((expanded_col - self.kernel_size[1] + self.paddingRight + self.paddingLeft)/1 + 1)
 			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
-
-		# strides = (2, 2)
-		# expanded_row = (self.input_shape[2] - 1) * (strides[0] -1) + self.input_shape[2]
-		# expanded_col = (self.input_shape[3] - 1) * (strides[0] -1) + self.input_shape[3]
 
 		else: raise "no such mode"
 
@@ -231,28 +233,28 @@ class CreateConvOps():
 		return output_name
 		
 
-	def construct_pad(self, testType, input_name_lst):
-		# this is stand alone pad
-		pad_node = O.helper.make_node(
-		op_type = 'Pad', # node name
-		inputs = input_name_lst, # inputs
-		outputs = [testType+'padding'], # outputs
-		#mode='constant', # Attributes
-		name=testType + 'pad',
-		pads=[0,0, self.paddingTop, self.paddingLeft, 0, 0, self.paddingBottom, self.paddingRight]
-		)
-		self.node_list.append(pad_node)
+	# def construct_pad(self, testType, input_name_lst):
+	# 	# this is stand alone pad
+	# 	pad_node = O.helper.make_node(
+	# 	op_type = 'Pad', # node name
+	# 	inputs = input_name_lst, # inputs
+	# 	outputs = [testType+'padding'], # outputs
+	# 	#mode='constant', # Attributes
+	# 	name=testType + 'pad',
+	# 	pads=[0,0, self.paddingTop, self.paddingLeft, 0, 0, self.paddingBottom, self.paddingRight]
+	# 	)
+	# 	self.node_list.append(pad_node)
 
 
-		after_pad_col = int(self.input_shape[3] + self.paddingLeft + self.paddingRight)
-		after_pad_row = int(self.input_shape[2] + self.paddingTop + self.paddingBottom)
+	# 	after_pad_col = int(self.input_shape[3] + self.paddingLeft + self.paddingRight)
+	# 	after_pad_row = int(self.input_shape[2] + self.paddingTop + self.paddingBottom)
 
-		self.input_shape = [self.input_shape[0], self.input_shape[1], after_pad_row, after_pad_col]
+	# 	self.input_shape = [self.input_shape[0], self.input_shape[1], after_pad_row, after_pad_col]
 
-		pad_info = O.helper.make_tensor_value_info(testType+'padding', O.TensorProto.FLOAT, self.input_shape)
-		self.values_info.append(pad_info)
-		output_name = [testType+'padding']
-		return output_name
+	# 	pad_info = O.helper.make_tensor_value_info(testType+'padding', O.TensorProto.FLOAT, self.input_shape)
+	# 	self.values_info.append(pad_info)
+	# 	output_name = [testType+'padding']
+	# 	return output_name
 	
 
 	def construct_conv3x3(self, testType, input_name_lst):
@@ -305,7 +307,7 @@ class CreateConvOps():
 			name = str(testType),
 			group = 1,
 			kernel_shape=list(kernel_size),
-			pads=[self.kernel_size[0]-1, self.kernel_size[1]-1, self.kernel_size[0]-1, self.kernel_size[1]-1],
+			pads=self.padding_info,
 			strides=list(strides),
 			)
 		self.node_list.append(deconv_node)

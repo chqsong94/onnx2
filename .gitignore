@@ -1,7 +1,5 @@
 .vscode/
 *.xlsx
-test_case*/
-gen_test*/
+*_layer_*/
+gen*
 __pycache__/
-gen_test*
-multi*
