@@ -1,5 +1,4 @@
 .vscode/
-*.xlsx
-*_layer_*/
 gen*
+test*
 __pycache__/
