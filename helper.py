@@ -148,7 +148,7 @@ class CreateConvOps():
 			strides = (2, 2)
 			expanded_row = (self.input_shape[2] - 1) * (strides[0] -1) + self.input_shape[2]
 			expanded_col = (self.input_shape[3] - 1) * (strides[0] -1) + self.input_shape[3]
-			output_rows = int((expanded_row - self.kernel_size[0] + self.paddingTop + self.paddingBottom)/1 + 1)
+			output_rows = int((expanded_row - self.kernel_size[0] + 2*self.paddingTop + 2*self.paddingBottom)/1 + 1)
 			output_cols = int((expanded_col - self.kernel_size[1] + self.paddingRight + self.paddingLeft)/1 + 1)
 			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
 
@@ -193,7 +193,7 @@ class CreateConvOps():
 		else: raise "no such mode"
 
 		
-		weights_value = np.random.normal(size=weights_shape).ravel()
+		weights_value = np.random.normal(size=weights_shape).ravel() #may need comment
 		w_info =  O.helper.make_tensor_value_info('weights'+testType, O.TensorProto.FLOAT, list(weights_shape))
 		weights_tensor = O.helper.make_tensor('weights_tensor', O.TensorProto.FLOAT, weights_shape, weights_value)
 		w_node = O.helper.make_node(
@@ -307,7 +307,7 @@ class CreateConvOps():
 			name = str(testType),
 			group = 1,
 			kernel_shape=list(kernel_size),
-			pads=self.padding_info,
+			pads=[ 2*self.paddingTop, self.paddingLeft, 2*self.paddingBottom, self.paddingRight],
 			strides=list(strides),
 			)
 		self.node_list.append(deconv_node)
@@ -673,11 +673,11 @@ def poolingLayer_wrapper(cfgDict):
 				if int(cfgDict["roi_pooling_row_cnt"]) ==0:
 					height = 1
 				else:
-					height = int(cfgDict["roi_pooling_row_cnt"]) if int(cfgDict["input_size_h_(row)"]) % int(cfgDict["roi_pooling_row_cnt"]) == 0 else int(cfgDict["roi_pooling_row_cnt"]) + 1
+					height = int(cfgDict["roi_pooling_row_cnt"]) if int(loc[0,4]-loc[0,2]) % int(cfgDict["roi_pooling_row_cnt"]) == 0 else int(cfgDict["roi_pooling_row_cnt"]) + 1
 				if int(cfgDict["roi_pooling_col_cnt"]) ==0:
 					width = 1
 				else:
-					width = int(cfgDict["roi_pooling_col_cnt"]) if int(cfgDict["input_size_w_(col)"]) % int(cfgDict["roi_pooling_col_cnt"]) == 0 else int(cfgDict["roi_pooling_col_cnt"]) + 1
+					width = int(cfgDict["roi_pooling_col_cnt"]) if int(loc[0,3]-loc[0,1]) % int(cfgDict["roi_pooling_col_cnt"]) == 0 else int(cfgDict["roi_pooling_col_cnt"]) + 1
 				output_pool_shape = (input_pool_shape[0], input_pool_shape[1], height, width)
 				output_pool_info = O.helper.make_tensor_value_info('output_pool_info'+testType, O.TensorProto.FLOAT, list(output_pool_shape))
 
