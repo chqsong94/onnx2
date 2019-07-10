@@ -2,3 +2,4 @@
 gen*
 test*
 __pycache__/
+*sigmoid*

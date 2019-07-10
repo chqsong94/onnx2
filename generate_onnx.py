@@ -180,10 +180,10 @@ def gen_single(excel_path, offset):
 if __name__ == "__main__":
     np.random.seed(8)
     input_root = "./test_cases"
-    gen_single(input_root + "/single_layer_test_case_8b", 1)
-    gen_single(input_root +  "/single_layer_test_case_base_8b_deweight", 21)
-    gen_single(input_root + "/single_layer_test_case_16b", 51)
-    gen_single(input_root +  "/single_layer_test_case_base_16b_deweight", 71)
+    gen_single(input_root + "/single_layer_test_case_ext8", 1)
+    gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21)
+    gen_single(input_root + "/single_layer_test_case_ext16", 51)
+    gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71)
     
     gen_multi(input_root + "/multi_layer_test_case", 1)
 
