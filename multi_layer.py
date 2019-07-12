@@ -21,10 +21,12 @@ def buildMultiLayerONNX(cfgDict1, cfgDict2):
 
     my_values_in = singleLayer1.values_in
     if singleLayer2.cfgDict["conv_mode_in_hw_setting"] in ["11", "16"] and singleLayer2.cfgDict["conv/pfunc"] == "CONV":
-        my_values_in.append( singleLayer2.values_in[-1])
+        my_values_in.append( singleLayer2.values_in[-1]) # this is for two input case
 
 
-    my_values_out= singleLayer2.values_out
+    my_values_out = singleLayer2.values_out
+    if singleLayer2.values_in == singleLayer2.values_out:
+        my_values_out = singleLayer1.values_out
     my_values_info=singleLayer1.values_info+singleLayer2.values_info[1:]
     MutiLayer = namedtuple("MultiLayer", ["node_list", "cfgDict", "values_in", "values_out" , "values_info"])
 

@@ -299,7 +299,7 @@ class CreateConvOps():
 
 	def construct_deconv(self, testType, input_name):
 		kernel_size = (int(self.cfgDict["kernel_size_h"]), int(self.cfgDict["kernel_size_w"]))
-		strides = (int(self.cfgDict["conv_stride"]), int(self.cfgDict["conv_stride"]))		
+		strides = (2, 2)		
 		deconv_node = O.helper.make_node(
 			op_type = 'ConvTranspose',
 			inputs = input_name,
@@ -516,7 +516,7 @@ def reluLayer_wrapper(cfgDict):
 		elif relu_mode == 2:
 			slope_relu_info = O.helper.make_tensor_value_info('slope_relu_info'+testType, O.TensorProto.FLOAT, list(input_relu_shape[1:]))
 			slope_relu_tensor = O.helper.make_tensor('slope_relu_tensor', O.TensorProto.FLOAT, 
-				list(input_relu_shape[1:]), np.random.normal(size =input_relu_shape[1]))
+				list(input_relu_shape), np.random.normal(size =input_relu_shape[1]))
 			node_slope = O.helper.make_node( 
 			op_type='Constant',
 			inputs=[],

@@ -9,7 +9,7 @@ from IPython import embed
 from single_layer import buildSingleLayerONNX
 from multi_layer import buildMultiLayerONNX
 import helper
-
+import datetime
 import re
 import json
 import xlrd
@@ -119,6 +119,8 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
         shutil.rmtree(dir_output)
     os.makedirs(dir_output)
     for cfgDict1, cfgDict2 in zip(cfgList1, cfgList2):
+
+    # for cfgDict1, cfgDict2 in zip([cfgList1[48]], [cfgList2[48]]):
         model_name = '{:05d}'.format(int(cfgDict1["test_case_number"])) + '_' + \
         cfgDict1["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_") + "_AND_" + \
         cfgDict2["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")
@@ -143,10 +145,12 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
 
 
 
-def gen_multi(excel_path, offset):
-    output_path = "./gen"
+def gen_multi(excel_path, offset, output_path):
     for version, test_plan in enumerate(os.listdir(excel_path)):
-        # if test_plan == "multi":
+    # test_plan = 'multi_layer_test_case_16_16_8.xlsx'
+    # version = 1
+    # print(test_plan)
+    # if test_plan == "multi":
         configs = OrderedDict()
         test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
         configs['fn_excel'] = test_plan
@@ -155,12 +159,11 @@ def gen_multi(excel_path, offset):
         testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
         cfgList1 = readTestCase(testCasesFileName, sheet_name='layer1')
         cfgList2 = readTestCase(testCasesFileName, sheet_name='layer2')
-        dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'],configs['fn_excel'].split('.')[0])
+        dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'], configs['fn_excel'].split('.')[0])
         genTestCase_multi(cfgList1, cfgList2, dir_output)
 
 
-def gen_single(excel_path, offset):
-    output_path = "./gen"
+def gen_single(excel_path, offset, output_path):
     for version, test_plan in enumerate(os.listdir(excel_path)):
         print(version, test_plan)
         if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
@@ -179,12 +182,20 @@ def gen_single(excel_path, offset):
 
 if __name__ == "__main__":
     np.random.seed(8)
-    input_root = "./test_cases"
-    gen_single(input_root + "/single_layer_test_case_ext8", 1)
-    gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21)
-    gen_single(input_root + "/single_layer_test_case_ext16", 51)
-    gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71)
+    directory = 'gen_' + str(datetime.date.today())
+    output_path = "./"+directory
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    os.makedirs(output_path)
     
-    gen_multi(input_root + "/multi_layer_test_case", 1)
+
+
+    input_root = "./test_cases"
+    gen_single(input_root + "/single_layer_test_case_ext8", 1, output_path)
+    gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
+    gen_single(input_root + "/single_layer_test_case_ext16", 51, output_path)
+    gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
+    
+    gen_multi(input_root + "/multi_layer_test_case", 1, output_path)
 
 
