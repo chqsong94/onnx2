@@ -12,7 +12,7 @@ import json
 import xlrd
 
 
-def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
+def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
     singleLayer = CreateConvOps(cfgDict)
     jsonFile = {}
     ################################################################################
@@ -117,7 +117,7 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
             singleLayer.getCONVOutputShape('dense')
             input_name_lst += singleLayer.construct_weights(testType, 'dense')
             input_name_lst += singleLayer.construct_bias(testType, 'dense')
-            convOpsName = singleLayer.construct_dense(testType, input_name_lst, layeridx)
+            convOpsName = singleLayer.construct_dense(testType, input_name_lst, needFlatten)
         # elif testType == "10":
         #     # matrix
         elif setting == "11":
@@ -195,7 +195,7 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
 
         # sigmoid/tanh
         # input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3, 4] else 15
-        output_bitwidth = 16 if int(singleLayer.cfgDict["relu_mode"]) in [3 , 4] else 15
+        output_bitwidth = 16 if int(singleLayer.cfgDict["relu_mode"]) in [4 , 5] else 15
 
         # default
         input_bitwidth = 15 if int(singleLayer.cfgDict["conv_16b"]) == 1 else 8
@@ -203,6 +203,14 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
 
         if cfgDict["pconv_gap_en"] == "0" and cfgDict["pconv_relu_en"] == '0':
             output_bitwidth = 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15
+
+        if needFlatten and setting == "9" :
+            jsonFile['flatten_' + str(layeridx) ] = {
+                "input_bitwidth": input_bitwidth,
+                "output_bitwidth": input_bitwidth
+            }
+
+
         jsonFile[testType] = {
             "input_bitwidth": input_bitwidth,
             "output_bitwidth": output_bitwidth
@@ -236,8 +244,8 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
 
             if cfgDict["pconv_gap_en"] == "1" and cfgDict["pconv_relu_en"] == '1':
                 # sigmoid/tanh
-                gap_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3, 4] else 15
-                gap_output_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3 , 4] else 15
+                gap_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [4, 5] else 15
+                gap_output_bitwidth = 16 if int(cfgDict["relu_mode"]) in [4 , 5] else 15
                 # default
                 # gap_input_bitwidth = gap_input_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
                 # gap_output_bitwidth = gap_output_bitwidth if int(cfgDict["pconv_16b"]) == 1 else 8
@@ -262,7 +270,7 @@ def buildSingleLayerONNX(cfgDict, layeridx, prevalueinfo=None):
 
             elif  cfgDict["pconv_relu_en"] == '1' and cfgDict["pconv_gap_en"] == "0":
                 # sigmoid/tanh
-                relu_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [3, 4] else 15
+                relu_input_bitwidth = 16 if int(cfgDict["relu_mode"]) in [4, 5] else 15
    
                 # default
                 relu_output_bitwidth = 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15

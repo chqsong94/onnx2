@@ -12,9 +12,15 @@ from single_layer import buildSingleLayerONNX
 
 
 def buildMultiLayerONNX(cfgDict1, cfgDict2):
-    jsonfile1, singleLayer1 = buildSingleLayerONNX(cfgDict1, layeridx=1, )
+    needFlatten = True
+    jsonfile1, singleLayer1 = buildSingleLayerONNX(cfgDict1, needFlatten,layeridx=1, )
 
-    jsonfile2, singleLayer2 = buildSingleLayerONNX(cfgDict2, layeridx=2, prevalueinfo=singleLayer1.values_out[0])
+    layer1NodeOpType_lst = []
+    for node in singleLayer1.node_list:
+        layer1NodeOpType_lst.append(node.op_type)
+    needFlatten = False if "Gemm" in layer1NodeOpType_lst else True
+    
+    jsonfile2, singleLayer2 = buildSingleLayerONNX(cfgDict2, needFlatten,layeridx=2, prevalueinfo=singleLayer1.values_out[0])
 
 
     my_node_list = singleLayer1.node_list + singleLayer2.node_list

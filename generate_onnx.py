@@ -96,7 +96,8 @@ def genTestCase_single(cfgList,dir_output):
         
         print('creating ' + model_name)
         my_jsonfile1 = getJson(cfgDict, model_name)
-        my_jsonfile2, mysingleLayer = buildSingleLayerONNX(cfgDict, 1)
+        needFlatten = True
+        my_jsonfile2, mysingleLayer = buildSingleLayerONNX(cfgDict, needFlatten, 1)
         model = helper.getModel(mysingleLayer)
         O.checker.check_model(model)
 
