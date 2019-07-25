@@ -317,7 +317,7 @@ class CreateConvOps():
 		return output_name
 
 
-	def construct_dense(self, testType, input_name, needFlatten):
+	def construct_dense(self, testType, input_name, needFlatten, layeridx):
 		if needFlatten:
 			flattened_output_shape = (self.input_shape[0], self.input_shape[1]*self.input_shape[2]*self.input_shape[3], 1, 1) # this is intermediate shape
 			output = O.helper.make_tensor_value_info('flatten'+testType, O.TensorProto.FLOAT, list(flattened_output_shape))
@@ -325,7 +325,7 @@ class CreateConvOps():
 				op_type = 'Flatten',
 				inputs=[input_name[0]],
 				outputs=['flatten'+testType],
-				name='flatten_1',
+				name='flatten_'+str(layeridx),
 				axis=1)
 			self.node_list.append(flatten_node)
 			self.values_info.append(output)

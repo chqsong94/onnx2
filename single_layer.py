@@ -117,7 +117,7 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
             singleLayer.getCONVOutputShape('dense')
             input_name_lst += singleLayer.construct_weights(testType, 'dense')
             input_name_lst += singleLayer.construct_bias(testType, 'dense')
-            convOpsName = singleLayer.construct_dense(testType, input_name_lst, needFlatten)
+            convOpsName = singleLayer.construct_dense(testType, input_name_lst, needFlatten, layeridx)
         # elif testType == "10":
         #     # matrix
         elif setting == "11":
@@ -207,13 +207,17 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
         if needFlatten and setting == "9" :
             jsonFile['flatten_' + str(layeridx) ] = {
                 "input_bitwidth": input_bitwidth,
-                "output_bitwidth": input_bitwidth
+                "output_bitwidth": input_bitwidth,
+                "decompact": singleLayer.cfgDict["decompact"],
+                "decompress": singleLayer.cfgDict["decompress"]
             }
 
 
         jsonFile[testType] = {
             "input_bitwidth": input_bitwidth,
-            "output_bitwidth": output_bitwidth
+            "output_bitwidth": output_bitwidth,
+            "decompact": singleLayer.cfgDict["decompact"],
+            "decompress": singleLayer.cfgDict["decompress"]
         }
 
     ################################################################################
@@ -252,12 +256,16 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
 
                 jsonFile["GAP_" + testType] = {
                     "input_bitwidth": gap_input_bitwidth,
-                    "output_bitwidth": gap_output_bitwidth # it depends
+                    "output_bitwidth": gap_output_bitwidth, # it depends
+                    "decompact": singleLayer.cfgDict["decompact"],
+                    "decompress": singleLayer.cfgDict["decompress"]
                 }
 
                 jsonFile["Relu_" + testType] = {
                     "input_bitwidth": gap_output_bitwidth,
-                    "output_bitwidth": 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15 # it depends
+                    "output_bitwidth": 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15, # it depends
+                    "decompact": singleLayer.cfgDict["decompact"],
+                    "decompress": singleLayer.cfgDict["decompress"]
                 }
 
 
@@ -265,7 +273,9 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
             elif cfgDict["pconv_gap_en"] == "1" and cfgDict["pconv_relu_en"] == '0':
                 jsonFile["GAP_" + testType] = {
                     "input_bitwidth": 15,
-                    "output_bitwidth": 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15 
+                    "output_bitwidth": 8 if int(singleLayer.cfgDict["conv_oformat"]) ==0 else 15,
+                    "decompact": singleLayer.cfgDict["decompact"],
+                    "decompress": singleLayer.cfgDict["decompress"] 
                 }
 
             elif  cfgDict["pconv_relu_en"] == '1' and cfgDict["pconv_gap_en"] == "0":
@@ -277,7 +287,9 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
 
                 jsonFile["Relu_" + testType] = {
                     "input_bitwidth": relu_input_bitwidth,
-                    "output_bitwidth": relu_output_bitwidth # it depends
+                    "output_bitwidth": relu_output_bitwidth, # it depends
+                    "decompact": singleLayer.cfgDict["decompact"],
+                    "decompress": singleLayer.cfgDict["decompress"]
                 }
 
         else: print('pconv is not enable')
@@ -313,10 +325,12 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
         # singleLayer.output_shape = output[2]
 
 
-        bitmode = dict(zip(['0', '1', '2', '3'], [8, 15, 8, 16]))
+        bitmode = dict(zip(['0', '1', '2', '3'], [8, 15, 8, 15]))
         jsonFile[testType] = {
             "input_bitwidth": bitmode[ singleLayer.cfgDict["pfunc_iformat"] ],
-            "output_bitwidth": bitmode[ singleLayer.cfgDict["pfunc_oformat"]]
+            "output_bitwidth": bitmode[ singleLayer.cfgDict["pfunc_oformat"]], 
+            "decompact": singleLayer.cfgDict["decompact"],
+            "decompress": singleLayer.cfgDict["decompress"]
         }
     else: raise "no such single layer test"
     return jsonFile, singleLayer

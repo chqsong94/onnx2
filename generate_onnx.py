@@ -60,28 +60,45 @@ def readTestCase(testCaseFileName, sheet_name):
 
 def getJson(cfgDict, model_name, idx="1"):
     mykeys = [
-    "output_channel_num",
-    "conv_pformat",	
-    "conv_oformat",	
-    "decompact",
-    "decompress",	
-    "conv_16b",	
-    "acc",	
-    "vstride2",	
-    "hstride2",	
-    "max",	
-    "channel_start",	
-    "channel_end",	
-    "line",	
-    "pconv_16b",	
-    "gap_col_acc",	
-    "pfunc_iformat",	
-    "pfunc_oformat"]
+        "conv_mode_in_hw_setting",
+        "conv_16b",	
+        "conv_pformat",	
+        "conv_oformat",
+        "pfunc_iformat",	
+        "pfunc_oformat"	
+        "nmem_st_s",
+        "nmem_st_offset_s", 
+        "nmem_po_s", 
+        "nmem_po_offset_s",
+        "acc",	
+        "vstride2",	
+        "hstride2",	
+        "max",	
+        "output_channel_num",
+        "channel_start",	
+        "channel_end",	
+        "line",	
+        "line_cg", 
+        "pconv_16b",	
+        "gap_col_acc",	
+    ]
 
     data1 = {"name": model_name} 
     data2 = {k: int(float(v)) for k, v in cfgDict.items() if k in mykeys}
-    data = {"summary"+idx:{**data1, **data2}}
-    return data
+
+    
+    if (cfgDict['conv_16b'] == '0' and cfgDict["nmem_st_s"] == '1')  or  (cfgDict["pfunc_iformat"] == '0' and cfgDict['nmem_po_s'] =='1'):
+        ofmt = "1W16C8B"
+    elif (cfgDict['conv_16b'] == '0' and cfgDict["nmem_st_s"] == '2')  or  (cfgDict["pfunc_iformat"] == '0' and cfgDict['nmem_po_s'] =='2'):
+        ofmt = "1W16C8B_INTLV"
+    elif (cfgDict['conv_16b'] == '1' and cfgDict["nmem_st_s"] == '1')  or  (cfgDict["pfunc_iformat"] == '1' and cfgDict['nmem_po_s'] =='1'):
+        ofmt = "1W16C8BHL"
+    elif (cfgDict['conv_16b'] == '1' and cfgDict["nmem_st_s"] == '2')  or  (cfgDict["pfunc_iformat"] == '1' and cfgDict['nmem_po_s'] =='2'):
+        ofmt = "1W16C8BHL_INTLV"
+    else:
+        ofmt = "None"
+    data = {"summary_"+idx:{**data1, **data2}}
+    return data, ofmt
 
 
 def genTestCase_single(cfgList,dir_output):
@@ -95,7 +112,7 @@ def genTestCase_single(cfgList,dir_output):
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
         
         print('creating ' + model_name)
-        my_jsonfile1 = getJson(cfgDict, model_name)
+        my_jsonfile1, ofmt = getJson(cfgDict, model_name)
         needFlatten = True
         my_jsonfile2, mysingleLayer = buildSingleLayerONNX(cfgDict, needFlatten, 1)
         model = helper.getModel(mysingleLayer)
@@ -110,6 +127,7 @@ def genTestCase_single(cfgList,dir_output):
 
         os.mkdir(dir_output + "/" + model_name)
         data = {**my_jsonfile1, **my_jsonfile2} 
+        data ["output_fmt"] = ofmt
         with open(dir_output+'/'+ model_name+'/'+'testcase.json', 'w') as outfile:  
             json.dump(data, outfile, indent=4)
         O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
@@ -127,8 +145,8 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
         cfgDict2["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
         print('creating ' + model_name)
-        data1 = getJson(cfgDict1, model_name)
-        data2 = getJson(cfgDict2, model_name, "2")
+        data1, ofmt1 = getJson(cfgDict1, model_name)
+        data2, ofmt2 = getJson(cfgDict2, model_name, "2")
         my_jsonfile, mymultiLayer = buildMultiLayerONNX(cfgDict1, cfgDict2)
         model = helper.getModel(mymultiLayer)
         O.checker.check_model(model)
@@ -140,6 +158,7 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
             continue
         os.mkdir(dir_output + "/" + model_name)
         data = {**data1, **data2, **my_jsonfile}
+        data ["output_fmt"] = ofmt2
         with open(dir_output+'/'+ model_name+'/'+'testcase.json', 'w') as outfile:  
             json.dump(data, outfile, indent=4)
         O.save(model, dir_output+'/'+ model_name + '/' + model_name +'.origin.onnx')
@@ -193,10 +212,10 @@ if __name__ == "__main__":
 
     input_root = "./test_cases"
     gen_single(input_root + "/single_layer_test_case_ext8", 1, output_path)
-    gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
+    # gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
     gen_single(input_root + "/single_layer_test_case_ext16", 51, output_path)
-    gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
+    # gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
     
     gen_multi(input_root + "/multi_layer_test_case", 1, output_path)
-
+    # gen_multi(input_root + "/single_test", 1, output_path)
 
