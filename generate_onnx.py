@@ -65,7 +65,7 @@ def getJson(cfgDict, model_name, idx="1"):
         "conv_pformat",	
         "conv_oformat",
         "pfunc_iformat",	
-        "pfunc_oformat"	
+        "pfunc_oformat",	
         "nmem_st_s",
         "nmem_st_offset_s", 
         "nmem_po_s", 
@@ -87,17 +87,17 @@ def getJson(cfgDict, model_name, idx="1"):
     data2 = {k: int(float(v)) for k, v in cfgDict.items() if k in mykeys}
 
     
-    if (cfgDict['conv_16b'] == '0' and cfgDict["nmem_st_s"] == '1')  or  (cfgDict["pfunc_iformat"] == '0' and cfgDict['nmem_po_s'] =='1'):
+    if (cfgDict['conv_oformat'] == '0' and cfgDict["nmem_st_s"] == '1')  or  (cfgDict["pfunc_oformat"] == '0' and cfgDict['nmem_po_s'] =='1'):
         ofmt = "1W16C8B"
-    elif (cfgDict['conv_16b'] == '0' and cfgDict["nmem_st_s"] == '2')  or  (cfgDict["pfunc_iformat"] == '0' and cfgDict['nmem_po_s'] =='2'):
+    elif (cfgDict['conv_oformat'] == '0' and cfgDict["nmem_st_s"] == '2')  or  (cfgDict["pfunc_oformat"] == '0' and cfgDict['nmem_po_s'] =='2'):
         ofmt = "1W16C8B_INTLV"
-    elif (cfgDict['conv_16b'] == '1' and cfgDict["nmem_st_s"] == '1')  or  (cfgDict["pfunc_iformat"] == '1' and cfgDict['nmem_po_s'] =='1'):
+    elif (cfgDict['conv_oformat'] == '1' and cfgDict["nmem_st_s"] == '1')  or  (cfgDict["pfunc_oformat"] == '1' and cfgDict['nmem_po_s'] =='1'):
         ofmt = "1W16C8BHL"
-    elif (cfgDict['conv_16b'] == '1' and cfgDict["nmem_st_s"] == '2')  or  (cfgDict["pfunc_iformat"] == '1' and cfgDict['nmem_po_s'] =='2'):
+    elif (cfgDict['conv_oformat'] == '1' and cfgDict["nmem_st_s"] == '2')  or  (cfgDict["pfunc_oformat"] == '1' and cfgDict['nmem_po_s'] =='2'):
         ofmt = "1W16C8BHL_INTLV"
     else:
         ofmt = "None"
-    data = {"summary_"+idx:{**data1, **data2}}
+    data = {"summary"+idx:{**data1, **data2}}
     return data, ofmt
 
 
