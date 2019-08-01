@@ -148,7 +148,7 @@ class CreateConvOps():
 			strides = (2, 2)
 			expanded_row = (self.input_shape[2] - 1) * (strides[0] -1) + self.input_shape[2]
 			expanded_col = (self.input_shape[3] - 1) * (strides[0] -1) + self.input_shape[3]
-			output_rows = int((expanded_row - self.kernel_size[0] + 2*self.paddingTop + 2*self.paddingBottom)/1 + 1)
+			output_rows = int((expanded_row - self.kernel_size[0] + self.paddingTop + self.paddingBottom)/1 + 1)
 			output_cols = int((expanded_col - self.kernel_size[1] + self.paddingRight + self.paddingLeft)/1 + 1)
 			self.output_shape = (1,  self.num_channels, output_rows, output_cols)
 
@@ -307,7 +307,7 @@ class CreateConvOps():
 			name = str(testType),
 			group = 1,
 			kernel_shape=list(kernel_size),
-			pads=[ 2*self.paddingTop, self.paddingLeft, 2*self.paddingBottom, self.paddingRight],
+			pads=[ self.paddingTop, self.paddingLeft, self.paddingBottom, self.paddingRight],
 			strides=list(strides),
 			)
 		self.node_list.append(deconv_node)

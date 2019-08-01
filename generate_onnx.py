@@ -219,12 +219,26 @@ def gen_single(excel_path, offset, output_path):
         dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'], configs['fn_excel'].split('.')[0])
         genTestCase_single(cfgList, dir_output)
 
-
+def gen_base_single(excel_path, offset, output_path):
+    for version, test_plan in enumerate(os.listdir(excel_path)):
+        print(version, test_plan)
+        if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
+            continue
+        configs = OrderedDict()
+        test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
+        configs['fn_excel'] = test_plan
+        configs['sheet_name'] = 'Sheet1' 
+        configs['version'] = 'v4{:02d}'.format(version+offset)   #offset changed
+        testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
+        cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
+        dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'], configs['fn_excel'].split('.')[0])
+        genTestCase_single(cfgList, dir_output)
 
 if __name__ == "__main__":
     np.random.seed(8)
     directory = 'gen_' + str(datetime.date.today())
     output_path = "./"+directory
+    
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
     os.makedirs(output_path)
@@ -233,10 +247,12 @@ if __name__ == "__main__":
 
     input_root = "./test_cases"
     gen_single(input_root + "/single_layer_test_case_ext8", 1, output_path)
-    # gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
-    gen_single(input_root + "/single_layer_test_case_ext16", 51, output_path)
-    # gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
+    # # # gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
+    # gen_single(input_root + "/single_layer_test_case_ext16", 51, output_path)
+    # # gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
     
     gen_multi(input_root + "/multi_layer_test_case", 1, output_path)
     # gen_multi(input_root + "/single_test", 1, output_path)
 
+    # gen_base_single(input_root + "/single_layer_test_case_base16", 1, output_path)
+    # gen_base_single(input_root + "/single_layer_test_case_base8", 21, output_path)
