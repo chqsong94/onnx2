@@ -132,7 +132,7 @@ def genTestCase_single(cfgList,dir_output):
 
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
         
-        print('creating ' + model_name)
+        #print('creating ' + model_name)
         my_jsonfile1, ofmt = getJson(cfgDict, model_name)
         needFlatten = True
         my_jsonfile2, mysingleLayer = buildSingleLayerONNX(cfgDict, needFlatten, 1)
@@ -165,7 +165,7 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
         cfgDict1["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_") + "_AND_" + \
         cfgDict2["test_case_notes"].lstrip(" ").rstrip(" ").replace(" ", "_")
         model_name.lstrip(" ").rstrip(" ").replace(" ", "_")
-        print('creating ' + model_name)
+        #print('creating ' + model_name)
         data1, ofmt1 = getJson(cfgDict1, model_name)
         data2, ofmt2 = getJson(cfgDict2, model_name, "2")
         my_jsonfile, mymultiLayer = buildMultiLayerONNX(cfgDict1, cfgDict2)
@@ -187,10 +187,11 @@ def genTestCase_multi(cfgList1, cfgList2,  dir_output):
 
 
 def gen_multi(excel_path, offset, output_path):
-    for version, test_plan in enumerate(os.listdir(excel_path)):
+    case_excel = [x for x in os.listdir(excel_path) if '.~' not in x]
+    for version, test_plan in enumerate(case_excel):
     # test_plan = 'multi_layer_test_case_16_16_8.xlsx'
     # version = 1
-    # print(test_plan)
+        print(version, test_plan)
     # if test_plan == "multi":
         configs = OrderedDict()
         test_plan.lstrip(" ").rstrip(" ").replace(" ", "_")
@@ -200,12 +201,13 @@ def gen_multi(excel_path, offset, output_path):
         testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
         cfgList1 = readTestCase(testCasesFileName, sheet_name='layer1')
         cfgList2 = readTestCase(testCasesFileName, sheet_name='layer2')
-        dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'], configs['fn_excel'].split('.')[0])
+        dir_output = "{}/gen_{}/{}".format(output_path, excel_path.split("/")[-1], configs['fn_excel'].split('.')[0])
         genTestCase_multi(cfgList1, cfgList2, dir_output)
 
 
 def gen_single(excel_path, offset, output_path):
-    for version, test_plan in enumerate(os.listdir(excel_path)):
+    case_excel = [x for x in os.listdir(excel_path) if '.~' not in x]
+    for version, test_plan in enumerate(case_excel):
         print(version, test_plan)
         if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
             continue
@@ -216,11 +218,12 @@ def gen_single(excel_path, offset, output_path):
         configs['version'] = 'v1{:02d}'.format(version+offset)   #offset changed
         testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
         cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
-        dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'], configs['fn_excel'].split('.')[0])
+        dir_output = "{}/gen_{}/{}".format(output_path, excel_path.split("/")[-1], configs['fn_excel'].split('.')[0])
         genTestCase_single(cfgList, dir_output)
 
 def gen_base_single(excel_path, offset, output_path):
-    for version, test_plan in enumerate(os.listdir(excel_path)):
+    case_excel = [x for x in os.listdir(excel_path) if '.~' not in x]
+    for version, test_plan in enumerate(case_excel):
         print(version, test_plan)
         if test_plan in ["elemSqaure_test_case.xlsx", "FCON_test_case.xlsx"]:
             continue
@@ -231,7 +234,7 @@ def gen_base_single(excel_path, offset, output_path):
         configs['version'] = 'v4{:02d}'.format(version+offset)   #offset changed
         testCasesFileName = "{}/{}".format(excel_path, configs['fn_excel'])
         cfgList = readTestCase(testCasesFileName, sheet_name=configs['sheet_name'])
-        dir_output = "{}/gen_{}/{}_{}".format(output_path, excel_path.split("/")[-1], configs['version'], configs['fn_excel'].split('.')[0])
+        dir_output = "{}/gen_{}/{}".format(output_path, excel_path.split("/")[-1], configs['fn_excel'].split('.')[0])
         genTestCase_single(cfgList, dir_output)
 
 if __name__ == "__main__":
@@ -245,11 +248,11 @@ if __name__ == "__main__":
     
 
 
-    input_root = "./test_cases"
+    input_root = "../test_case"
     gen_single(input_root + "/single_layer_test_case_ext8", 1, output_path)
-    # # # gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
-    # gen_single(input_root + "/single_layer_test_case_ext16", 51, output_path)
-    # # gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
+    # gen_single(input_root +  "/single_layer_test_case_base8_deweight", 21, output_path)
+    gen_single(input_root + "/single_layer_test_case_ext16", 51, output_path)
+    # gen_single(input_root +  "/single_layer_test_case_base16_deweight", 71, output_path)
     
     gen_multi(input_root + "/multi_layer_test_case", 1, output_path)
     # gen_multi(input_root + "/single_test", 1, output_path)

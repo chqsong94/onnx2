@@ -292,7 +292,8 @@ def buildSingleLayerONNX(cfgDict, needFlatten, layeridx, prevalueinfo=None):
                     "decompress": singleLayer.cfgDict["decompress"]
                 }
 
-        else: print('pconv is not enable')
+        #else:
+            #print('pconv is not enable')
         # print(singleLayer.values_info[-1])
         singleLayer.values_out.append(singleLayer.values_info[-1])
         # singleLayer.output_shape = input_shape
