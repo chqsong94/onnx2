@@ -81,7 +81,7 @@ class CreateConvOps():
 				outputs = ['slice_out' + testType],
 				starts= np.array([0, 0, self.row1, self.col1], dtype=np.int64),
 				ends= np.array([1, self.input_shape[1], self.row2, self.col2], dtype=np.int64),
-				name=testType+"slice"
+				name="slice" + testType
 				)
 	
 			self.node_list.append(slice_node)
@@ -96,7 +96,7 @@ class CreateConvOps():
 				outputs = ['slice_out1' + testType],
 				starts= np.array([0, 0, self.row1, self.col1], dtype=np.int64),
 				ends= np.array([0, self.input_shape[1], self.row2, self.col2], dtype=np.int64),
-				name=testType+"slice1"
+				name="slice1" + testType
 				)
 
 			self.node_list.append(slice_node1)
@@ -109,7 +109,7 @@ class CreateConvOps():
 				outputs = ['slice_out2' + testType],
 				starts= np.array([0, 0, self.row1, self.col1], dtype=np.int64),
 				ends= np.array([0, self.input_shape[1], self.row2, self.col2], dtype=np.int64),
-				name= testType+"slice2"
+				name= "slice2" + testType
 				)
 			self.node_list.append(slice_node2)
 			output2 = O.helper.make_tensor_value_info('slice_out2'+testType, O.TensorProto.FLOAT, list(self.input_shape))
@@ -662,7 +662,7 @@ def poolingLayer_wrapper(cfgDict):
 				op_type='Constant',
 				inputs=[],
 				outputs=['rois_info'+testType],
-				name='rois',
+				name='rois' + testType,
 				value=rois_tensor
 				)
 				node_lst.append(rois_node)
